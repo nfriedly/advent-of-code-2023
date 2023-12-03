@@ -84,3 +84,38 @@ assert.deepEqual(filterImpossible(parse(testInput), {red:12, green:13, blue: 14}
 assert.equal(sum(filterImpossible(parse(testInput), {red:12, green:13, blue: 14})), 8)
 
 part1()
+
+
+function gamePower(game) {
+    const min = {
+        red: 0,
+        blue: 0,
+        green: 0
+    }
+    game.sets.forEach(set => {
+        if ((set.red || 0) > min.red) {
+            min.red = set.red
+        }
+        if ((set.blue || 0) > min.blue) {
+            min.blue = set.blue
+        }
+        if ((set.green || 0) > min.green) {
+            min.green = set.green
+        }
+    })
+    return min.red * min.blue * min.green;
+}
+
+assert.deepEqual(gamePower({gameNum: 1, sets: [
+    { blue:3, red:4 },
+    { red: 1, green: 2, blue: 6 },
+    { green: 2 } 
+]}), 48)
+
+function powerSum(games) {
+    return games.map(gamePower).reduce((a,b) => a+b)
+}
+
+assert.equal(powerSum(parse(testInput)), 2286)
+
+console.log("Part  2:", powerSum(parse(input)))
