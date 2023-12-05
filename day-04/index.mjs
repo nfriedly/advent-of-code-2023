@@ -1,9 +1,10 @@
 import assert from 'node:assert'
+import {sum, intersection, lines} from '../utils.mjs'
 import {readFileSync} from 'node:fs'
 const input = readFileSync('./input.txt').toString();
 
 function parse(input) {
-    return input.split(/[\r\n]+/).map(parseLine)
+    return lines(input).map(parseLine)
 }
 
 function parseLine(line) {
@@ -27,12 +28,8 @@ function scoreCard(card) {
     return Math.pow(2, numWinners-1)
 }
 
-function intersection(a,b) {
-    return a.filter(a => b.includes(a))
-}
-
 function scoreInput(input) {
-    return parse(input).map(scoreCard).reduce((a,b)=>a+b)
+    return sum(parse(input).map(scoreCard))
 }
 
 const testInput = `Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
@@ -42,7 +39,7 @@ Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
 Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
 Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11`;
 
-const testLine = testInput.split(/[\r\n]+/)[0];
+const testLine = lines(testInput)[0];
 
 assert.deepEqual(parseLine(testLine), {
     card: 1,
