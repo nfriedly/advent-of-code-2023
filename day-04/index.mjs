@@ -52,3 +52,21 @@ assert.equal(scoreCard(parseLine(testLine)), 8)
 assert.equal(scoreInput(testInput), 13)
 
 console.log('Part 1:', scoreInput(input))
+
+function countInstances(cards) {
+    const instances = cards.slice().fill(1);
+    for(let i=0; i < cards.length; i++) {
+        const card = cards[i];
+        const matches = intersection(card.winners, card.nums).length
+        for(let n=0; n<instances[i]; n++) {
+            for(let j=i+1; j<i+1+matches; j++) {
+                instances[j]++;
+            }
+        }
+    }
+    return sum(instances)
+}
+
+assert.equal(countInstances(parse(testInput)), 30)
+
+console.log('Part 2:', countInstances(parse(input)))
