@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import {lines, toNum} from '../utils.mjs';
+import {lines, toNum, min} from '../utils.mjs';
 import {readFileSync} from 'node:fs'
 const input = readFileSync('./input.txt').toString();
 
@@ -128,3 +128,23 @@ seed-to-soil map:
  assert.equal(lowestLocation(testInput), 35)
 
  console.log('Part 1:', lowestLocation(input))
+
+ const data = parse(input);
+ // this is not the optimal way to do this...
+ // also, it's off by 1 for the real input, but correct for the test input
+ function lowestLocation2({seeds,maps}) {
+    let loc = Infinity
+    for (let i = 0; i<seeds.length; i=i+2) {
+        const start = seeds[i];
+        const count = seeds[i+1];
+        for(let j=start; j<start+count; j++) {
+            loc = Math.min(loc, applyMaps(j, maps));
+        }
+    }
+    return loc;
+ }
+
+ assert.deepEqual(lowestLocation2(testData), 46)
+
+ // this takes *a while*, then logs 137516821. However, the correct answer is 137516820
+ //console.log('Part 2:', lowestLocation2(data.seeds, data.maps))
