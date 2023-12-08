@@ -15,16 +15,18 @@ const types = {
     "Five_of_a_kind": 7,
 }
 
-function parse(input) {
-    return lines(input).map(parseLine)
+function parse(input, joker=false) {
+    return lines(input).map(l => parseLine(l, joker))
 }
 
-function parseLine(line) {
+function parseLine(line, joker=false) {
     const [rawHand, rawBid] = line.split(' ');
-    const hand = parseHand(rawHand);
+    const cards = rawHand.split('').map(c => cardVal(c, joker));
+    const type = getType(cards);
     const bid = toNum(rawBid)
     return {
-        ...hand,
+        type,
+        cards,
         bid
     }
 }
@@ -32,47 +34,41 @@ function parseLine(line) {
 const cardVals = {
     A:14, K:13, Q: 12, J: 11, T: 10
 }
-function cardVal(c) {
-    return cardVals[c] || toNum(c)
+function cardVal(c, joker=false) {
+    if (joker && c === 'J') return 1;
+    return cardVals[c] || toNum(c);
 }
 
-function parseHand(raw) {
-    const cards = raw.split('').map(cardVal);
+function getType(cards) {
     const cardMap = _.countBy(cards)
+    const jokers = cardMap[1] ?? 0;
     const cardCounts = Object.entries(cardMap)
         .map(([card, count]) => ([card, count]))
         .sort(([valA, countA], [valB, countB]) => countB-countA || valB-valA)
-    const [primaryCard, primaryCount] = cardCounts[0];
+    let [primaryCard, primaryCount] = cardCounts[0];
+    if (jokers && primaryCount < 5) {
+        primaryCount += (primaryCard == 1 ? cardCounts[1][1] : jokers)
+    }
     let type;
     switch (primaryCount) {
         case 5:
-            type = types.Five_of_a_kind;
-            break;
+            return types.Five_of_a_kind;
         case 4:
-            type = types.Four_of_a_kind;
-            break;
+            return types.Four_of_a_kind;
         case 3:
-            type = cardCounts.length == 2 ? types.Full_house : types.Three_of_a_kind;
-            break;
+            if (jokers == 1 && cardCounts.length === 3) { return types.Full_house; s}
+            return type = cardCounts.length == 2 ? types.Full_house : types.Three_of_a_kind;
         case 2:
-            type = cardCounts.length == 3 ? types.Two_pair : types.One_pair;
-            break;
+            return cardCounts.length == 3 ? types.Two_pair : types.One_pair;
         default:
-            type = types.High_card;
-    }
-    return {
-        type,
-        cards,
+            return types.High_card;
     }
 }
 
 assert.equal(cardVal('A'), 14)
 assert.equal(cardVal('2'), 2)
 
-assert.deepEqual(parseHand('AAAAA'), {
-    type: types.Five_of_a_kind,
-    cards: [14, 14, 14, 14, 14]
-})
+assert.equal(getType([3,3,3,3,3]), types.Five_of_a_kind)
 
 assert.deepEqual(parseLine('32T3K 765'), {
     type: types.One_pair,
@@ -132,3 +128,64 @@ function scoreHands(hands) {
 assert.equal(scoreHands(parse(testInput)), 6440)
 
 console.log('Part 1:', scoreHands(parse(input)))
+
+assert.equal(scoreHands(parse(testInput, true)), 5905)
+
+assert.equal(getType([1,1,1,1,1]), types.Five_of_a_kind)
+assert.equal(getType([1,1,1,1,2]), types.Five_of_a_kind)
+assert.equal(getType([2,2,2,2,1]), types.Five_of_a_kind)
+
+assert.equal(getType([3,3,3,2,4]), types.Three_of_a_kind)
+assert.equal(getType([3,3,3,2,2]), types.Full_house)
+assert.equal(getType([2,2,3,3,1]), types.Full_house)
+assert.equal(getType([3,3,3,2,1]), types.Four_of_a_kind)
+assert.equal(getType([2,3,1,1,1]), types.Four_of_a_kind)
+
+
+assert.equal(getType([3,3,4,2,1]), types.Three_of_a_kind)
+assert.equal(getType([3,5,4,2,1]), types.One_pair)
+
+// https://www.reddit.com/r/adventofcode/comments/18cr4xr/2023_day_7_better_example_input_not_a_spoiler/
+const testInput2 = `2345A 1
+Q2KJJ 13
+Q2Q2Q 19
+T3T3J 17
+T3Q33 11
+2345J 3
+J345A 2
+32T3K 5
+T55J5 29
+KK677 7
+KTJJT 34
+QQQJA 31
+JJJJJ 37
+JAAAA 43
+AAAAJ 59
+AAAAA 61
+2AAAA 23
+2JJJJ 53
+JJJJ2 41`
+
+assert.deepEqual(rankHands(parse(testInput2, true)), parse(`2345A 1
+J345A 2
+2345J 3
+32T3K 5
+KK677 7
+T3Q33 11
+Q2KJJ 13
+T3T3J 17
+Q2Q2Q 19
+2AAAA 23
+T55J5 29
+QQQJA 31
+KTJJT 34
+JJJJJ 37
+JJJJ2 41
+JAAAA 43
+2JJJJ 53
+AAAAJ 59
+AAAAA 61`, true))
+
+assert.equal(scoreHands(parse(testInput2, true)), 6839)
+
+console.log('Part 2:', scoreHands(parse(input, true)))
