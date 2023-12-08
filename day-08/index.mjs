@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import fs from 'node:fs'
 import {lines, sections} from '../utils.mjs'
-//import _ from 'lodash'
+import lcm from 'lcm'
 
 // 2 steps
 const testInput1 = `RL
@@ -33,7 +33,8 @@ function parse(input) {
 
 function parseLine(line) {
     const [key, options] = line.split(' = ');
-    const [L, R] = options.match(/[A-Z]{3}/g)
+    //console.log(`partsing options ('${options}') from '${line}'`)
+    const [L, R] = options.match(/[A-Z0-9]{3}/g)
     return [key, {L, R}]
 }
 
@@ -70,3 +71,44 @@ assert.equal(countSteps(parse(testInput2)), 6)
 const input = fs.readFileSync('./input.txt').toString()
 
 console.log('Part 1:', countSteps(parse(input)))
+
+const testInput3 = `LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)`
+
+function findCycleLength(start, directions, network) {
+    let count = 0;
+    let cur = start;
+    let i = 0;
+    let offset = -1
+    while (true) {
+        if (i >= directions.length) {
+            i = 0;
+        }
+        //console.log(cur, directions[i])
+        cur = network[cur][directions[i]];
+        
+        count++;
+        i++;
+        
+        if (cur[2] === 'Z') {
+            return count;
+        }
+    }
+}
+
+function countStepsParallel({directions, network}) {
+    const starts = Object.keys(network).filter(k => k[2] === 'A');
+    return starts.map(start => findCycleLength(start, directions, network)).reduce((a,b) => lcm(a,b))
+}
+
+assert.deepEqual(countStepsParallel(parse(testInput3)), 6)
+
+console.log('Part 2:', countStepsParallel(parse(input)))
