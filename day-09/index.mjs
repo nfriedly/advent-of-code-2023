@@ -51,3 +51,29 @@ function extrapolateAll(sequences) {
 assert.equal(extrapolateAll(testData), 114)
 
 console.log('Part 1:', extrapolateAll(parse(input)))
+
+function extraplateBackwards(sequence) {
+    let cur = sequence.slice();
+    let sequences = [cur];
+    while(cur.some(n => n)) {
+        cur = getDeltas(cur)
+        sequences.push(cur)
+    }
+    let nextVal;
+    for (let i=sequences.length - 1; i>0; i--) {
+        cur = sequences[i];
+        const next = sequences[i-1]
+        const delta = cur[0];
+        nextVal = next[0] - delta
+        next.unshift(nextVal);
+    }
+    return nextVal;
+}
+
+function extrapolateAllBackwards(sequences) {
+    return sequences.map(extraplateBackwards).reduce(add)
+}
+
+assert.equal(extrapolateAllBackwards(testData), 2)
+
+console.log('Part 1:', extrapolateAllBackwards(parse(input)))
