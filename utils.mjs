@@ -7,3 +7,4 @@ export const toNum = n => parseInt(n, 10);
 export const min = nums => nums.reduce((a,b) => Math.min(a,b));
 export const product = nums => nums.reduce((a,b) => a*b);
 export const charMap = input => lines(input).map(l => l.split(''))
+export const printMap = (data) => data.concat([[]]).map(r => console.log(r.join('')))

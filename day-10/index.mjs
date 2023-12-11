@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import fs from 'node:fs'
-import { charMap as parse } from '../utils.mjs'
+import { charMap as parse, printMap } from '../utils.mjs'
 
 const input = fs.readFileSync('./input.txt').toString();
 
@@ -266,7 +266,7 @@ function realS(path) {
 
 const testData3 = parse(testInput3);
 let actual = countInsides(testData3);
-testData3.forEach(row => console.log(row.join('')))
+printMap(testData3)
 assert.equal(actual, 4);
 
 console.log('Part 2:', countInsides(data))
