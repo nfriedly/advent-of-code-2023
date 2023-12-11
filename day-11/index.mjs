@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import fs from 'node:fs'
-import { charMap as parse, printMap } from '../utils.mjs'
+import { charMap as parse, printMap, sum } from '../utils.mjs'
 
 const testInput = `...#......
 .......#..
@@ -112,3 +112,24 @@ assert.equal(sumDistances(findGalaxies(testImageExpanded)), 374)
 const input = fs.readFileSync('./input.txt').toString()
 const image = parse(input);
 console.log('Part 1:', sumDistances(findGalaxies(expand(image))));
+
+function findExpandGalaxies(image, factor=1000000) {
+    const galaxies = findGalaxies(image)
+    const hasGalaxyY = image.map(row => row.some(c => c === '#'))
+    const hasGalaxyX = image[0].slice().fill(false);
+    image.forEach(row => row.forEach((val, x) => {if (val == '#') hasGalaxyX[x]=true}))
+    //console.log({galaxies, hasGalaxyY, hasGalaxyX})
+    return galaxies.map(([oy, ox]) => {
+        let expansionsY = hasGalaxyY.slice(0, oy).filter(hg => !hg).length;
+        let expansionsX = hasGalaxyX.slice(0, ox).filter(hg => !hg).length;
+        //console.log({oy, ox, expansionsY, expansionsX})
+        return [oy - expansionsY + (expansionsY * factor), ox - expansionsX + (expansionsX * factor)]
+    })    
+}
+
+//console.log(findGalaxies(testImageExpanded))
+//console.log(findExpandGalaxies(testImage, 2))
+
+assert.equal(sumDistances(findExpandGalaxies(testImage, 2)), 374)
+
+console.log("Part 2:", sumDistances(findExpandGalaxies(image)))
