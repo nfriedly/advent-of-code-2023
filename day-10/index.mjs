@@ -4,7 +4,7 @@ import { add, lines, toNum } from '../utils.mjs'
 
 const input = fs.readFileSync('./input.txt').toString();
 
-// 4
+// furthest distance is 4
 const testInput1 = `-L|F7
 7S-7|
 L|7||
@@ -21,16 +21,6 @@ LJ.LJ`
 function parse(input) {
     return lines(input).map(l => l.split(''))
 }
-
-// const dirMap = {
-//     '|' is a vertical pipe connecting north and south.
-//     - is a horizontal pipe connecting east and west.
-//     L is a 90-degree bend connecting north and east.
-//     J is a 90-degree bend connecting north and west.
-//     7 is a 90-degree bend connecting south and west.
-//     F is a 90-degree bend connecting south and east.
-// }
-
 
 function findS(data) { // [y,x] starting from top left
     for(let y=0; y<data.length; y++) {
@@ -101,19 +91,22 @@ function findNext(prev, cur, data) {
 assert.deepEqual(findNext([1,1], [1,2], testData1), [1,3])
 assert.deepEqual(findNext([2,0], [2,1], testData2), [1,1])
 
-function findFarthestDistance(data) {
+function findPath(data) {
     const start = findS(data);
     let prev = start;
     let cur = findFirstMove(start, data);
-    let count = 1;
+    let path = [prev]
     while(!(cur[0] == start[0] && cur[1] == start[1])) {
-        //console.log({start, prev, cur, count})
+        path.push(cur)
         const next = findNext(prev, cur, data);
         prev = cur;
         cur = next;
-        count++;
     }
-    return count/2
+    return path
+}
+
+function findFarthestDistance(data) {
+    return findPath(data).length/2
 }
 
 assert.equal(findFarthestDistance(testData1), 4)
@@ -123,3 +116,175 @@ assert.equal(findFarthestDistance(testData2), 8)
 const data = parse(input);
 // logs 6808, which is apparently too low
 console.log('Part 1:', findFarthestDistance(data))
+
+// 4 enclosed
+const testInput3 = `...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........`
+
+// 4
+const testInput4 = `...........
+.S-------7.
+.|F-----7|.
+.||OOOOO||.
+.||OOOOO||.
+.|L-7OF-J|.
+.|II|O|II|.
+.L--JOL--J.
+.....O.....`
+
+// 8
+const testInput5 = `OF----7F7F7F7F-7OOOO
+O|F--7||||||||FJOOOO
+O||OFJ||||||||L7OOOO
+FJL7L7LJLJ||LJIL-7OO
+L--JOL7IIILJS7F-7L7O
+OOOOF-JIIF7FJ|L7L7L7
+OOOOL7IF7||L7|IL7L7|
+OOOOO|FJLJ|FJ|F7|OLJ
+OOOOFJL-7O||O||||OOO
+OOOOL---JOLJOLJLJOOO` 
+
+// 10
+const testInput6 = `FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L`
+
+function contains(path, y, x) {
+    return path.some(([py,px]) => py == y && px == x)
+}
+
+assert(contains([[1,1], [1,2]], 1, 2))
+assert(!contains([[1,1], [1,2]], 1, 0))
+
+function countInsides(data) {
+    const path = findPath(data);
+
+    // overwrite S with the proper value for the ray tracer below
+    const S = path[0]
+    data[S[0]][S[1]] = realS(path)
+    //return -1
+
+    // // find the first corner
+    // let startIndex = path.findIndex((y,x) => ['L','J','7','F'].includes(data[y][x]));
+    // const [fy,fx] = path[startIndex];
+
+    // // figure out which side is "inside"
+    // let inside;
+    // let pathLetter = data[fy][fx]
+    // if (pathLetter == 'L') inside = [-1,1];
+    // else if (pathLetter == 'J') inside = [-1,-1];
+    // else if (pathLetter == '7') inside = [1,-1];
+    // else if (pathLetter == 'F') inside = [1,1];
+    // else throw 'Unable to determine inside';
+
+    // point in polygon for each point in the grid
+    // just cast in all points in the same direction for now
+    let count = 0;
+    for(let y=0; y<data.length; y++) {
+        const row = data[y]
+        for(let x=0; x<row.length; x++) {
+            // don't bother for points that are on the path
+            // todo: handle rays that are parallel with the path
+            if (contains(path, y, x)) continue;
+            let crosses = 0;
+            let enteredFrom = null;
+            for (let tx=x; tx<row.length; tx++) {
+                let val = data[y][tx];
+                if (contains(path, y, tx) && val != '-') {
+                    if (val == 'F' || val == 'L') {
+                        enteredFrom = val
+                        continue;
+                    } else if (
+                        (val == '7' && enteredFrom == 'F') || 
+                        (val == 'J' && enteredFrom == 'L')
+                    ) {
+                        // didn't actually cross the line, just ran along it a bit
+                        enteredFrom = null;
+                        continue;
+                    }
+                    crosses++;
+                }
+            }
+            data[y][x] = crosses;
+            if (crosses % 2 == 1) count++
+        }
+    }
+    return count;
+}
+
+//     '|' is a vertical pipe connecting north and south.
+//     - is a horizontal pipe connecting east and west.
+//     L is a 90-degree bend connecting north and east.
+//     J is a 90-degree bend connecting north and west.
+//     7 is a 90-degree bend connecting south and west.
+//     F is a 90-degree bend connecting south and east.
+function realS(path) {
+    const [sy,sx] = path[0];
+    const [py,px] = path[path.length-1];
+    const [ny,nx] = path[1];
+
+    // s = [1,1]
+    // n = [1,2]
+    // p = [2,1]
+    const dirs = [];
+    if (px == sx) {
+        dirs.push(py > sy ? 'S' : 'N')
+    } else if (sy == py) {
+        dirs.push(px > sx ? 'W' : 'E')
+    } else {
+        throw `Bad previous / start match: [${py},${px}] / [${sy},${sx}]`
+    }
+
+    if (nx == sx) {
+        dirs.push(ny > sy ? 'S' : 'N')
+    } else if (ny == sy) {
+        dirs.push(nx > sx ? 'E' : 'W')
+    } else {
+        throw 'Bad start / next match'
+    }
+
+    assert.notEqual(dirs[0], dirs[1])
+
+    const [a,b] = dirs.sort() // E,N,S,W
+
+    if (a == 'N' && b == 'S') {
+        return '|'
+    }
+    if (a == 'E' && b == 'W') {
+        return '-'
+    }
+    if (a == 'E' && b == 'N') {
+        return 'L'
+    }
+    if (a == 'N' && B == 'W') {
+        return 'J'
+    }
+    if (a == 'S' && b == 'W') {
+        return '7'
+    } if (a == 'E' && b == 'S') {
+        return 'F'
+    }
+    throw `Unexpected dirs: ${a}, ${b}`
+}
+
+
+const testData3 = parse(testInput3);
+let actual = countInsides(testData3);
+testData3.forEach(row => console.log(row.join('')))
+assert.equal(actual, 4);
+
+console.log('Part 2:', countInsides(data))
