@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import fs from 'node:fs'
-import { add, lines, toNum } from '../utils.mjs'
+import { charMap as parse } from '../utils.mjs'
 
 const input = fs.readFileSync('./input.txt').toString();
 
@@ -18,9 +18,6 @@ SJLL7
 |F--J
 LJ.LJ`
 
-function parse(input) {
-    return lines(input).map(l => l.split(''))
-}
 
 function findS(data) { // [y,x] starting from top left
     for(let y=0; y<data.length; y++) {
@@ -114,7 +111,6 @@ assert.equal(findFarthestDistance(testData1), 4)
 assert.equal(findFarthestDistance(testData2), 8)
 
 const data = parse(input);
-// logs 6808, which is apparently too low
 console.log('Part 1:', findFarthestDistance(data))
 
 // 4 enclosed
@@ -176,20 +172,6 @@ function countInsides(data) {
     // overwrite S with the proper value for the ray tracer below
     const S = path[0]
     data[S[0]][S[1]] = realS(path)
-    //return -1
-
-    // // find the first corner
-    // let startIndex = path.findIndex((y,x) => ['L','J','7','F'].includes(data[y][x]));
-    // const [fy,fx] = path[startIndex];
-
-    // // figure out which side is "inside"
-    // let inside;
-    // let pathLetter = data[fy][fx]
-    // if (pathLetter == 'L') inside = [-1,1];
-    // else if (pathLetter == 'J') inside = [-1,-1];
-    // else if (pathLetter == '7') inside = [1,-1];
-    // else if (pathLetter == 'F') inside = [1,1];
-    // else throw 'Unable to determine inside';
 
     // point in polygon for each point in the grid
     // just cast in all points in the same direction for now
