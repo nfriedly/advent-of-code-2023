@@ -68,12 +68,6 @@ class EnergyMap {
         return x + y*this.width;
     }
 
-    getEnergized() {
-        // this.energized.add(this.id(0,0))
-        // this.markBeam(0,0,E);
-        return this.traceBeam(0,-1,E)
-    }
-
     markBeam(y,x,dir) {
         const cur = this.beamMap[y][x];
         if(['|','-','\\','/'].includes(cur)) return;
@@ -128,14 +122,40 @@ class EnergyMap {
         throw `Unhandled tile(${tile}) & direction(${direction}) combo at ${y},${x} from ${fromY}, ${fromX}`
     }
 
-    getEnergizedCount() {
-        return this.getEnergized().size
+    getEnergizedCount(y=0,x=-1,dir=E) {
+        const val = this.traceBeam(y,x,dir).size;
+        console.log({y, x, dir, val})
+        return val
     }
 }
 
 assert.equal((new EnergyMap(testInput)).getEnergizedCount(), 46);
 
 const input = fs.readFileSync('./input.txt').toString();
-const em = new EnergyMap(input)
-console.log('Part 1:', em.getEnergizedCount());
+console.log('Part 1:', (new EnergyMap(input)).getEnergizedCount());
 //printMap(em.beamMap);
+
+function mostEnergized(input) {
+    let best = -1;
+    const map = toRows(input);
+    const height = map.length;
+    const width = map[0].length;
+    for(let i=0; i<width; i++) {
+        best = Math.max(best, 
+            (new EnergyMap(input)).getEnergizedCount(0,i,S),
+            (new EnergyMap(input)).getEnergizedCount(height-1,i,N),
+        )
+    }
+    for(let i=0; i<height; i++) {
+        best = Math.max(best, 
+            (new EnergyMap(input)).getEnergizedCount(i,0,E),
+            (new EnergyMap(input)).getEnergizedCount(i,width-1,W),
+        )
+    }
+    return best;
+}
+
+assert.equal(mostEnergized(testInput), 51);
+
+// this is off by 1, it logs 7487, but the correct answer is 7488
+console.log('Part 2:', mostEnergized(input));
