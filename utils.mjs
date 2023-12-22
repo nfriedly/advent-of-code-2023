@@ -1,3 +1,4 @@
+import _ from 'lodash'
 export const lines = str => str.trim().split(/[\r\n]+/);
 export const toRows = str => lines(str).map(row => row.split(''))
 export const toColumns = str => {
@@ -10,6 +11,7 @@ export const toColumns = str => {
     });
     return cols;
 }
+export const toRowsNum = str => lines(str).map(row => row.split('').map(toNum))
 export const sections = input => input.replaceAll('\r', '').split(/\n\n/)
 export const add = (a,b) => a+b;
 export const sum = arr => arr.reduce(add);
@@ -20,3 +22,14 @@ export const product = nums => nums.reduce((a,b) => a*b);
 export const charMap = toRows;
 export const fromRows = (data) => data.map(r => r.join('')).join('\n')
 export const printMap = (data) => console.log('\n'+fromRows(data)+'\n')
+export function printMaps(...maps){
+    console.log('');
+    _.zip(...maps)
+    .forEach(rows => 
+        console.log(rows
+            .map(row => row.join(''))
+            .join(' | ')
+        )
+    );
+    console.log('');
+}

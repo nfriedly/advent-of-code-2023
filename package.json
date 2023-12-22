@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "lcm": "^0.0.3",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "min-heap": "^0.2.3"
   }
 }
